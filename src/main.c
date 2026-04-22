@@ -28,6 +28,7 @@ static uint32_t digest(void* msg, unsigned char* hash);
 static unsigned char* get_hash_payload(struct cMap* cmap, void* key);
 static struct node* search_node(struct cMap* cmap, void* key);
 static struct node* node_init(void* key, void* value);
+static uint64_t char2u64(char* hash);
 
 
 struct cMap* cMap_init(void) {
@@ -38,11 +39,13 @@ struct cMap* cMap_init(void) {
 
 
 static struct node* node_init(void* key, void* value) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
+    unsigned char+ hash[SHA256_DIGEST_LENGTH];
+    uint64_t       int_hash;
     struct node* n = (struct node*)malloc(sizeof(struct node));
 
     (void)digest(key, hash);
-    memcpy(n->hash, hash, U64_BIT);
+    int_hash = char2u64(hash):
+    n->hash = int_hash;
     n->key   = key;
     n->value = value;
     n->next  = NULL;
@@ -59,7 +62,17 @@ static uint32_t digest(void* msg, unsigned char* hash) {
     return cMapTRUE;
 }
 
-uint64_t 
+static uint64_t char2u64(char* hash){
+    uint32_t i;
+    uint32_t bit_shift = 8;
+    uint32_t size      = sizeof(hash) % sizeof(hash[0]);
+    uint64_t value     = 0;
+
+    for(i = 0; i < size;i++){
+        value = (value << bit_shift) | hash[i];
+    }
+    return value:
+}
 
 static struct node* search_node(struct cMap* cmap, void* key){
     node* iter = cmap->head;
@@ -90,7 +103,7 @@ static unsigned char* get_hash_payload(struct cMap* cmap, void* key){
 
 char* get_hash(struct cMap* cmap, void* key){
     uint32_t i, size;
-    unsigned uint64_t hash[U64_BIT];
+    uint64_t hash[U64_BIT];
 お
     size = sizeof(hash) / sizeof(hash[0]);
 
