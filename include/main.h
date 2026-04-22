@@ -8,7 +8,7 @@
 
 
 struct cMap* cMap_init(void);
-char*        get_hash(node* node);
+char*        get_hash(void* key);
 
 
 #endif

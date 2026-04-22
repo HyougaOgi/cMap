@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stduint32_t.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -6,23 +7,26 @@
 
 #include <include/main.h>
 
+#define  U64_BIT SHA256_DIGEST_LENGTH
 
 struct cMap {
-    int   size;
-    int   next;
-    int   len;
+    uint32_t     size;
+    uint32_t     next;
+    uint32_t     len;
     struct node* head;
 };
 
 struct node {
-             char  hash[SHA256_DIGEST_LENGTH];
+             uint64_t  hash[U64_BIT];
              void* key;
              void* value;
     struct   node* next;
 };
 
 
-static int digest(void* msg, unsigned char* hash);
+static uint32_t digest(void* msg, unsigned char* hash);
+static unsigned char* get_hash_payload(struct cMap* cmap, void* key);
+static struct node* search_node(struct cMap* cmap, void* key);
 static struct node* node_init(void* key, void* value);
 
 
@@ -37,8 +41,8 @@ static struct node* node_init(void* key, void* value) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     struct node* n = (struct node*)malloc(sizeof(struct node));
 
-    digest(key, hash);
-    memcpy(n->hash, hash, SHA256_DIGEST_LENGTH);
+    (void)digest(key, hash);
+    memcpy(n->hash, hash, U64_BIT);
     n->key   = key;
     n->value = value;
     n->next  = NULL;
@@ -47,7 +51,7 @@ static struct node* node_init(void* key, void* value) {
 }
 
 
-static int digest(void* msg, unsigned char* hash) {
+static uint32_t digest(void* msg, unsigned char* hash) {
     if (SHA256((const unsigned char *)msg, strlen(msg), hash) == NULL){
         return cMapFALSE;
     }
@@ -55,12 +59,39 @@ static int digest(void* msg, unsigned char* hash) {
     return cMapTRUE;
 }
 
-// index and key
+uint64_t 
 
-char* get_hash(void* key){
-    int i, size;
-    unsigned char hash[SHA256_DIGEST_LENGTH];
+static struct node* search_node(struct cMap* cmap, void* key){
+    node* iter = cmap->head;
 
+    if (iter == NULL) return NULL;
+    
+    do {
+        if (key == iter->key){
+            return iter;
+        }
+        iter = iter->next;
+
+    } while (iter != NULL);
+
+    return NULL;
+    
+}
+
+static unsigned char* get_hash_payload(struct cMap* cmap, void* key){
+    node* n;
+    n = search_node(cmap, key);
+    if (n == NULL){
+
+    }
+
+
+} 
+
+char* get_hash(struct cMap* cmap, void* key){
+    uint32_t i, size;
+    unsigned uint64_t hash[U64_BIT];
+お
     size = sizeof(hash) / sizeof(hash[0]);
 
     for(i = 0; i < size;i++){
@@ -70,12 +101,11 @@ char* get_hash(void* key){
     return hash;
 }
 
-
 //void* get_value(key)
 //for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-//    printf("%02x", n.hash[i]);
+//    pruint32_tf("%02x", n.hash[i]);
 //}
-//printf("\n");
+//pruint32_tf("\n");
 
 //void add(struct cMap* cmap, void* key, void* value){
 //}
@@ -91,12 +121,12 @@ char* get_hash(void* key){
 //}
 
 
-int main(void){
-    printf("test\n");
+uint32_t main(void){
+    pruint32_tf("test\n");
     struct cMap* cmap = cMap_init();
     struct node* n = node_init("test", "10");
     cmap->head = n;
     (void)get_hash(n);
-    printf("%s\n", n->hash);
+    pruint32_tf("%s\n", n->hash);
     return 0;
 }
