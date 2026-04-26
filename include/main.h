@@ -13,6 +13,7 @@
 struct cMap* cMap_init(void);
 uint32_t cMap_death(struct cMap* cmap);
 char*        get_hash(void* key);
-void disp_hash(struct node* n);
+void disp_hash(struct cMap* cmap, void* key);
+
 
 #endif
