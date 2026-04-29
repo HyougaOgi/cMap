@@ -10,10 +10,10 @@
 #define NODENULL  0
 #define HASHNULL  0
 
-struct cMap* cMap_init(void);
-uint32_t cMap_death(struct cMap* cmap);
+struct cMap* cmap_init(void);
+uint32_t cmap_free(struct cMap* cmap);
 char*        get_hash(void* key);
-void disp_hash(struct cMap* cmap, void* key);
+void cmap_print_hash(struct cMap* cmap, void* key);
 
 
 #endif

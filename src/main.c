@@ -8,10 +8,12 @@
 #include <include/main.h>
 
 #define  U32BIT SHA256_DIGEST_LENGTH
+#define  HASH_SIZE 8
+
 
 struct cMap {
-    uint32_t     size;
-    uint32_t     next;
+//    uint32_t     size;
+//    uint32_t     next;
     uint32_t     len;
     struct node* head;
 };
@@ -23,30 +25,40 @@ struct node {
     struct   node*      next;
 };
 
-static uint32_t conversion_hash_char2uint32(unsigned char* char_hash, uint32_t* uint_hash);
-static void create_hash(void* msg, int* hash);
-static uint32_t digest(void* msg, unsigned char* hash);
+static void allc_free(void* data);
+static void dynamic_allc_cmap(struct cMap* cmap, uint32_t size);
+static uint32_t sha256_bytes_to_u32(unsigned char* char_hash, uint32_t* uint_hash);
+static void compute_key_hash(void* msg, uint32_t* hash);
+static void dynamic_allc_32(uint32_t* data, uint32_t size);
+static uint32_t sha256_digest(void* msg, unsigned char* hash);
 //static unsigned char* get_hash_payload(struct cMap* cmap, void* key);
 //static struct node* search_node(struct cMap* cmap, void* key);
-static uint32_t head_death(struct node* head);
+static uint32_t cmap_head_free(struct node* head);
 static struct node* search_node(struct cMap* cmap, void* key);
 static struct node* node_init(void* key, void* value);
-static uint32_t node_death(struct node* n);
+static uint32_t node_free(struct node* n);
 //static uint64_t char2u64(char* hash);
 
 
-struct cMap* cMap_init(void) {
-    struct cMap*cmap = (struct cMap*)malloc(sizeof(struct cMap));
+struct cMap* cmap_init(void) {
+    struct cMap* cmap;
+    dynamic_allc_cmap(cmap, 0);
+    cmap->head = NULL;
+    cmap->len  = 0;
 
     return cmap;
 }
 
 
 static struct node* node_init(void* key, void* value) {
-    uint32_t*      hash = (uint32_t*)malloc(sizeof(uint32_t) * 8);
-    struct node*   n    = (struct node*)malloc(sizeof(struct node));
+    //uint32_t*      hash = (uint32_t*)malloc(sizeof(uint32_t) * 8);
+    struct node* n;
+    uint32_t* hash;
 
-    create_hash(key, hash);
+    dynamic_allc_node(n, 0);
+    dynamic_allc_32(hash, HASH_SIZE);
+
+    (void)compute_key_hash(key, hash);
  //    int_hash = char2u64(hash):
     n->hash  = hash;
     n->key   = key;
@@ -56,20 +68,19 @@ static struct node* node_init(void* key, void* value) {
     return n;
 }
 
-uint32_t cMap_death(struct cMap* cmap){
+uint32_t cmap_free(struct cMap* cmap){
     if (cmap == NULL){
         printf("cMap is NULL\n");
         return CMAPNULL;
     }
-
-    head_death(cmap->head);
+    cmap_head_free(cmap->head);
     free(cmap);
     printf("complete destruct\n");
 
     return CMAPTRUE;
 }
 
-static uint32_t node_death(struct node* n){
+static uint32_t node_free(struct node* n){
     if(n == NULL){  
 #ifdef DEBUG
         printf("node is NULL\n");
@@ -95,7 +106,7 @@ static uint32_t node_death(struct node* n){
     return CMAPTRUE;
 }
 
-static uint32_t head_death(struct node* head){
+static uint32_t cmap_head_free(struct node* head){
     if(head == NULL){
 #ifdef DEBUG
         printf(head is NULL);
@@ -107,7 +118,7 @@ static uint32_t head_death(struct node* head){
     struct node* next_node = iter->next;
 
     while (iter != NULL){
-        node_death(iter);
+        node_free(iter);
         iter = next_node;
         if (next_node != NULL){
             next_node = next_node->next;
@@ -118,7 +129,7 @@ static uint32_t head_death(struct node* head){
 }
 
 // little
-static uint32_t digest(void* msg, unsigned char* hash) {
+static uint32_t sha256_digest(void* msg, unsigned char* hash) {
     if (SHA256((const unsigned char *)msg, strlen(msg), hash) == NULL){
         return CMAPFALSE ;
     }
@@ -126,24 +137,26 @@ static uint32_t digest(void* msg, unsigned char* hash) {
     return CMAPTRUE;
 }
 
-static uint32_t conversion_hash_char2uint32(unsigned char* char_hash, uint32_t* uint_hash){
-    memcpy(uint_hash, comp_hash, SHA256_DIGEST_LENGTH);
+static uint32_t sha256_bytes_to_u32(unsigned char* char_hash, uint32_t* uint_hash){
+    memcpy(uint_hash, char_hash, SHA256_DIGEST_LENGTH);
 
     return CMAPTRUE;
 }
 
-static uint32_t create_hash(void* msg, int* hash){
+static uint32_t compute_key_hash(void* msg, uint32_t* hash){
     unsigned char tmp[SHA256_DIGEST_LENGTH];
 
-    if(digest(msg, tmp) != CMAPTRUE){
+    if(sha256_digest(msg, tmp) != CMAPTRUE){
         // do nothing
     }
-    if(conversion_hash_char2uint32(tmp, hash) != CMAPTRUE){
+    if(sha256_bytes_to_u32(tmp, hash) != CMAPTRUE){
         // do nothing
     }
+
+    return CMAPTRUE;
 }
 
-void disp_hash(struct cMap* cmap, void* key){
+void cmap_print_hash(struct cMap* cmap, void* key){
     uint32_t i;
     struct node* n = search_node(cmap, key);
     uint32_t* hash = n->hash;
@@ -154,6 +167,34 @@ void disp_hash(struct cMap* cmap, void* key){
     }
     printf("\n");
 }
+
+
+static void dynamic_allc_32(uint32_t* data, uint32_t size){
+    if(data == NULL){
+        data = (uint32_t*)malloc(sizeof(uint32_t) * size);
+    } 
+}
+
+static void dynamic_allc_cmap(struct cMap* cmap, uint32_t size){
+    (void)size;
+    if (cmap == NULL){
+        struct cMap* cmap = (struct cMap*)malloc(sizeof(struct cMap));
+    }
+}
+
+static void dynamic_allc_node(struct node* n, uint32_t size){
+    (void)size;
+    if (n == NULL){
+        n = (struct node*)malloc(sizeof(struct node));
+    }
+}
+
+static void allc_free(void* data){
+    if(data == NULL){
+        free(data);
+    }
+}
+
 //static uint64_t char2u64(char* hash){
 //    uint32_t i;
 //    uint32_t bit_shift = 8;
@@ -173,7 +214,7 @@ static struct node* search_node(struct cMap* cmap, void* key){
     uint32_t comp_hash[8];
 
     while (iter != NULL){ 
-        (void)digest(iter->key, comp_hash);
+        (void)compute_key_hash(iter->key, comp_hash);
         if (key == iter->key && iter->hash == comp_hash){
             return iter;
         }
@@ -229,11 +270,11 @@ static struct node* search_node(struct cMap* cmap, void* key){
 
 int main(void){
     printf("test\n");
-    struct cMap* cmap = cMap_init();
+    struct cMap* cmap = cmap_init();
     struct node* n = node_init("test", "10");
     cmap->head = n;
 //    (void)get_hash(n);
-    disp_hash(cmap->head);
-    cMap_death(cmap);
+    cmap_print_hash(cmap, "test");
+    cmap_free(cmap);
     return 0;
 }
